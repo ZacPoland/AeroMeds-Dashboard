@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AeroMeds — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F3ED; --panel:#fff; --ink:#16231F; --sub:#5C6862; --line:#E1DED2;
+  --teal:#0F5C50; --teal-deep:#0A3E37; --amber:#C97A2B; --amber-bg:#FBF0E1;
+  --sage:#3F7D5C; --sage-bg:#E8F1EA; --rust:#B84C3C; --rust-bg:#FBEAE6;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#DDD8C8;color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:26px 12px;}
+h1,h2{font-family:'Spectral',Georgia,serif;margin:0;}
+.phone{width:360px;background:var(--bg);border:8px solid #14201C;border-radius:34px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+.notch{height:22px;background:#14201C;position:relative;}
+.notch::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:70px;height:8px;background:#000;border-radius:6px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--teal-deep);color:#F3EFE4;}
+.topbar .side{display:flex;gap:12px;font-size:15px;}
+.topbar .side span{cursor:pointer;opacity:.9;}
+.topbar .side span.active{opacity:1;text-shadow:0 0 6px rgba(255,255,255,.4);}
+.brand{font-family:'Spectral',serif;font-weight:600;font-size:14px;}
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:10.5px;color:var(--sub);}
+.step-dot{width:18px;height:18px;border-radius:50%;background:var(--line);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.step-dot.on{background:var(--teal);}
+.step-line{width:20px;height:1.5px;background:var(--line);}
+.step-line.on{background:var(--teal);}
+.screen-wrap{height:560px;overflow-y:auto;position:relative;}
+.screen{display:none;padding:16px;}
+.screen.active{display:block;}
+.hero{background:linear-gradient(160deg,var(--teal),var(--teal-deep));color:#fff;border-radius:10px;padding:20px 16px;margin-bottom:14px;}
+.hero h2{font-size:19px;}
+.hero p{font-size:12px;color:#CFE3DB;margin:4px 0 0;}
+.btn{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:9px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink);}
+.btn.primary{background:var(--teal);color:#fff;text-align:center;border:none;}
+.btn.ghost{background:transparent;border:1px dashed var(--line);color:var(--sub);text-align:center;font-weight:500;}
+.btn .sub{display:block;font-weight:400;color:var(--sub);font-size:11px;margin-top:1px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+.field select,.field input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff;font-family:inherit;}
+.row-actions{display:flex;gap:8px;margin-top:16px;}
+.row-actions .btn{margin-bottom:0;}
+.map{position:relative;height:150px;background:#EFEEE6;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;}
+.zone{position:absolute;border-radius:8px;}
+.zone.safe{border:1.5px dashed var(--sage);background:rgba(63,125,92,.08);top:20px;left:20px;width:110px;height:70px;}
+.zone.nofly{border:1.5px dashed var(--rust);background:rgba(184,76,60,.09);top:15px;right:15px;width:80px;height:55px;}
+.legend{display:flex;gap:10px;font-size:10px;color:var(--sub);margin-bottom:12px;}
+.legend span{display:flex;align-items:center;gap:4px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.summary-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.summary-row .lbl{color:var(--sub);}
+.edit-link{color:var(--teal);font-weight:600;font-size:11px;cursor:pointer;}
+.status-banner{display:flex;gap:10px;align-items:center;background:var(--sage-bg);border:1px solid var(--sage);color:var(--sage);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-weight:600;font-size:13px;}
+.progress{height:8px;border-radius:4px;background:#EAE7DC;overflow:hidden;margin:10px 0 4px;}
+.progress>div{height:100%;background:var(--teal);width:55%;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;}
+.stat .l{font-size:10px;color:var(--sub);text-transform:uppercase;}
+.stat .v{font-size:16px;font-weight:700;}
+.notif{display:flex;gap:9px;padding:10px 0;border-bottom:1px solid var(--line);}
+.notif .dot{margin-top:5px;}
+.notif strong{display:block;font-size:12.5px;}
+.notif span{font-size:11px;color:var(--sub);}
+.check-hero{text-align:center;padding:26px 10px 16px;}
+.check-circ{width:56px;height:56px;border-radius:50%;background:var(--sage);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.acct-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer;}
+.acct-row:last-child{border-bottom:none;}
+.warn-inline{font-size:11px;color:var(--rust);background:var(--rust-bg);border-radius:6px;padding:8px 10px;margin-top:10px;display:none;}
+.warn-inline.show{display:block;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(10,16,14,.5);display:none;align-items:center;justify-content:center;z-index:50;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:10px;padding:18px;width:270px;text-align:center;}
+.modal p{font-size:13px;margin:0 0 14px;color:var(--ink);}
+.modal .row-actions{margin-top:0;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="topbar">
+    <div class="brand">AeroMeds</div>
+    <div class="side">
+      <span onclick="go('home')" title="Home">⌂</span>
+      <span onclick="toast('Support: call (843) 555-0134')" title="Support">?</span>
+      <span onclick="go('account')" title="Account">☺</span>
+    </div>
+  </div>
+  <div class="steps" id="steps" style="display:none;">
+    <div class="step-dot" id="sd1">1</div><div class="step-line" id="sl1"></div>
+    <div class="step-dot" id="sd2">2</div><div class="step-line" id="sl2"></div>
+    <div class="step-dot" id="sd3">3</div>
+  </div>
+
+  <div class="screen-wrap">
+
+    <!-- HOME -->
+    <div class="screen active" id="home">
+      <div class="hero">
+        <h2>Medication delivered when you need it</h2>
+        <p>Safe · fast · reliable — for you or the person you care for.</p>
+      </div>
+      <button class="btn primary" onclick="go('request')">＋ New delivery</button>
+      <button class="btn" onclick="go('tracking')">Track delivery <span class="sub">1 active — arriving in 12 min</span></button>
+      <button class="btn" onclick="go('notifications')">Notifications <span class="sub">3 recent updates</span></button>
+      <button class="btn ghost" onclick="go('confirmation')">View last delivery confirmation</button>
+    </div>
+
+    <!-- REQUEST -->
+    <div class="screen" id="request">
+      <h2 style="font-size:15px;margin-bottom:12px;">Package information</h2>
+      <div class="field"><label>Pharmacy</label><select><option>CityCare Pharmacy</option><option>Riverside Pharmacy</option></select></div>
+      <div class="field"><label>Medication type</label><input placeholder="e.g. Prescription, OTC"></div>
+      <div class="field"><label>Package weight</label><input value="0.6 lbs" readonly></div>
+      <div class="field"><label>Special instructions (optional)</label><input placeholder="e.g. leave at front door"></div>
+      <div class="row-actions">
+        <button class="btn" style="flex:1" onclick="go('home')">Back</button>
+        <button class="btn primary" style="flex:1" onclick="go('location')">Next →</button>
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div class="screen" id="location">
+      <h2 style="font-size:15px;margin-bottom:12px;">Select address &amp; drop zone</h2>
+      <div class="field"><label>Delivery address</label><input value="123 College St, Charleston, SC"></div>
+      <div class="map">
+        <div class="zone safe"></div>
+        <div class="zone nofly"></div>
+      </div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--sage)"></span>Safe drop zone</span>
+        <span><span class="dot" style="background:var(--rust)"></span>No-fly zone</span>
+      </div>
+      <div class="row-actions">
+        <button class="btn" style="flex:1" onclick="go('request')">Back</button>
+        <button class="btn primary" style="flex:1" onclick="go('confirm')">Next →</button>
+      </div>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="screen" id="confirm">
+      <h2 style="font-size:15px;margin-bottom:6px;">Delivery summary</h2>
+      <div class="summary-row"><span class="lbl">Medication</span><span>Prescription (CityCare) <span class="edit-link" onclick="go('request')">Edit</span></span></div>
+      <div class="summary-row"><span class="lbl">Delivery address</span><span>123 College St <span class="edit-link" onclick="go('location')">Edit</span></span></div>
+      <div class="summary-row"><span class="lbl">Drop zone</span><span>Front porch — Safe zone ✓</span></div>
+      <div class="summary-row"><span class="lbl">Estimated time</span><span>25–35 min</span></div>
+      <div id="confirmWarn" class="warn-inline">⚠ Selected drop zone must be re-confirmed as safe before dispatch.</div>
+      <div class="row-actions">
+        <button class="btn" style="flex:1" onclick="go('location')">Back</button>
+        <button class="btn primary" style="flex:1" onclick="confirmDispatch()">Place order</button>
+      </div>
+    </div>
+
+    <!-- TRACKING -->
+    <div class="screen" id="tracking">
+      <div class="status-banner">🚁 On the way — arriving soon</div>
+      <div class="progress"><div></div></div>
+      <div class="stat-grid">
+        <div class="stat"><div class="l">Estimated arrival</div><div class="v">12 min</div></div>
+        <div class="stat"><div class="l">Distance remaining</div><div class="v">2.4 mi</div></div>
+        <div class="stat"><div class="l">Altitude</div><div class="v">120 ft</div></div>
+        <div class="stat"><div class="l">Battery</div><div class="v" style="color:var(--sage)">78%</div></div>
+      </div>
+      <button class="btn ghost" onclick="cancelDelivery()">Cancel delivery</button>
+      <button class="btn primary" onclick="go('confirmation')">Simulate: mark delivered →</button>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="screen" id="notifications">
+      <h2 style="font-size:15px;margin-bottom:10px;">Delivery notifications</h2>
+      <div class="notif"><span class="dot" style="background:var(--sage)"></span><div><strong>Order confirmed</strong><span>10:05 AM — your delivery has been scheduled</span></div></div>
+      <div class="notif"><span class="dot" style="background:var(--sage)"></span><div><strong>Package picked up</strong><span>10:22 AM — your medication is on the way</span></div></div>
+      <div class="notif"><span class="dot" style="background:var(--amber)"></span><div><strong>Approaching delivery zone</strong><span>10:42 AM — arriving in 2 minutes</span></div></div>
+      <div class="notif"><span class="dot" style="background:var(--sage)"></span><div><strong>Delivered</strong><span>10:47 AM — your package has been delivered</span></div></div>
+      <button class="btn" style="margin-top:8px;" onclick="go('home')">Back to home</button>
+    </div>
+
+    <!-- DELIVERY CONFIRMATION -->
+    <div class="screen" id="confirmation">
+      <div class="check-hero">
+        <div class="check-circ">✓</div>
+        <h2 style="font-size:17px;">Delivered!</h2>
+        <p style="font-size:12px;color:var(--sub);margin:4px 0 0;">Your medication has been delivered safely.</p>
+      </div>
+      <div class="summary-row"><span class="lbl">Delivered at</span><span>123 College St, Charleston</span></div>
+      <div class="summary-row"><span class="lbl">Time</span><span>10:47 AM · Sep 22, 2026</span></div>
+      <div class="summary-row"><span class="lbl">Verified by</span><span>PIN + digital signature</span></div>
+      <button class="btn primary" style="margin-top:14px;" onclick="go('home')">Back to home</button>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="screen" id="account">
+      <h2 style="font-size:15px;margin-bottom:10px;">Account &amp; settings</h2>
+      <div class="acct-row"><span>Delivery history</span><span>›</span></div>
+      <div class="acct-row"><span>Saved addresses</span><span>›</span></div>
+      <div class="acct-row"><span>Payment methods</span><span>›</span></div>
+      <div class="acct-row"><span>Notification preferences</span><span>›</span></div>
+      <div class="acct-row"><span>Privacy &amp; security</span><span>›</span></div>
+      <div class="acct-row"><span>Help &amp; support</span><span>›</span></div>
+      <button class="btn" style="margin-top:14px;color:var(--rust)" onclick="go('home')">Log out</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <p id="modalText">Are you sure?</p>
+    <div class="row-actions">
+      <button class="btn" style="flex:1" onclick="closeModal()">No, go back</button>
+      <button class="btn primary" style="flex:1" id="modalYes">Yes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const stepScreens = {request:1, location:2, confirm:3};
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.topbar .side span').forEach(s=>s.classList.remove('active'));
+  const steps = document.getElementById('steps');
+  if(stepScreens[id]){
+    steps.style.display='flex';
+    for(let i=1;i<=3;i++){
+      document.getElementById('sd'+i).classList.toggle('on', i<=stepScreens[id]);
+    }
+    document.getElementById('sl1').classList.toggle('on', stepScreens[id]>=2);
+    document.getElementById('sl2').classList.toggle('on', stepScreens[id]>=3);
+  } else {
+    steps.style.display='none';
+  }
+  document.getElementById('confirmWarn').classList.remove('show');
+}
+function confirmDispatch(){
+  showModal('Confirm order and dispatch the drone to this address?', ()=>{ closeModal(); go('tracking'); });
+}
+function cancelDelivery(){
+  showModal('Cancel this delivery in progress? The drone will return to base.', ()=>{ closeModal(); go('home'); });
+}
+function showModal(text, onYes){
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalBg').classList.add('show');
+  document.getElementById('modalYes').onclick = onYes;
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+function toast(msg){ alert(msg); }
+</script>
+</body>
+</html>

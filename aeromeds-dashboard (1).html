@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AeroMeds Delivery Operations Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F3ED; --panel:#FFFFFF; --ink:#16231F; --sub:#5C6862;
+  --line:#DFDCD1; --teal:#0F5C50; --teal-deep:#0A3E37;
+  --amber:#C97A2B; --amber-bg:#FBF0E1; --sage:#3F7D5C; --sage-bg:#E8F1EA;
+  --rust:#B84C3C; --rust-bg:#FBEAE6;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.45;}
+h1,h2,h3{font-family:'Spectral',Georgia,serif;margin:0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;padding-top:calc(16px + env(safe-area-inset-top,0px));background:var(--teal-deep);color:#F3EFE4;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:30px;height:30px;border-radius:50%;background:#F3EFE4;color:var(--teal-deep);display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;font-weight:600;font-size:15px;}
+.brand h1{font-size:19px;font-weight:600;letter-spacing:.2px;}
+.brand p{margin:1px 0 0;font-size:11.5px;color:#B9CFC6;}
+.topbar-right{display:flex;align-items:center;gap:18px;font-size:12.5px;color:#CFE3DB;}
+.pulse{width:7px;height:7px;border-radius:50%;background:#7ED9A8;display:inline-block;margin-right:6px;box-shadow:0 0 0 3px rgba(126,217,168,.25);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:22px 24px 40px;}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;}
+.kpi .label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;}
+.kpi .value{font-family:'Spectral',serif;font-size:26px;font-weight:600;margin-top:4px;}
+.kpi .delta{font-size:11.5px;margin-top:2px;color:var(--sage);}
+.kpi .delta.down{color:var(--rust);}
+
+.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start;}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line);}
+.panel-head h2{font-size:15px;font-weight:600;}
+.panel-head .meta{font-size:11.5px;color:var(--sub);}
+.panel-body{padding:14px 16px;}
+
+/* Live map */
+.map{position:relative;height:270px;background:
+  linear-gradient(var(--line) 1px, transparent 1px) 0 0/38px 38px,
+  linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/38px 38px,
+  #EFEEE6;border-radius:4px;overflow:hidden;}
+.zone{position:absolute;border-radius:8px;}
+.zone.safe{border:1.5px dashed var(--sage);background:rgba(63,125,92,.06);}
+.zone.nofly{border:1.5px dashed var(--rust);background:rgba(184,76,60,.07);}
+.pin{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);}
+.pin.drone{background:var(--teal);}
+.pin.home{background:var(--amber);}
+.pin.pharmacy{background:var(--sub);}
+.route{position:absolute;border-top:2px dashed var(--teal);opacity:.6;}
+.map-legend{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:4px;padding:7px 10px;font-size:11px;display:flex;gap:12px;}
+.map-legend span{display:flex;align-items:center;gap:5px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+/* Fleet */
+.fleet-row{display:grid;grid-template-columns:70px 1fr 100px 90px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.fleet-row:last-child{border-bottom:none;}
+.fleet-id{font-weight:600;}
+.progress{height:6px;border-radius:3px;background:#EAE7DC;overflow:hidden;}
+.progress > div{height:100%;background:var(--teal);}
+.status-pill{font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:600;display:inline-block;}
+.status-pill.transit{background:var(--sage-bg);color:var(--sage);}
+.status-pill.delivering{background:var(--amber-bg);color:var(--amber);}
+.status-pill.check{background:var(--rust-bg);color:var(--rust);}
+.batt{font-variant-numeric:tabular-nums;color:var(--sub);}
+
+/* Alerts */
+.alert{display:flex;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:flex-start;}
+.alert:last-child{border-bottom:none;}
+.alert .icon{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+.alert.critical .icon{background:var(--rust);color:#fff;}
+.alert.warn .icon{background:var(--amber);color:#fff;}
+.alert.info .icon{background:var(--teal);color:#fff;}
+.alert .txt strong{display:block;font-size:12.8px;margin-bottom:1px;}
+.alert .txt span{font-size:11.5px;color:var(--sub);}
+.alert.critical{background:var(--rust-bg);}
+
+/* Deliveries table */
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);padding:8px 16px;border-bottom:1px solid var(--line);}
+td{padding:9px 16px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+.status-chip{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;}
+.status-chip.delivered{background:var(--sage-bg);color:var(--sage);}
+.status-chip.transit{background:var(--amber-bg);color:var(--amber);}
+
+.section-gap{margin-top:14px;}
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:6px;}
+.bar{flex:1;background:var(--teal);border-radius:3px 3px 0 0;position:relative;}
+.chart-labels{display:flex;gap:6px;margin-top:6px;}
+.chart-labels span{flex:1;text-align:center;font-size:10px;color:var(--sub);}
+
+footer{text-align:center;font-size:11px;color:var(--sub);padding:18px 0 4px;}
+
+@media (max-width:900px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div>
+      <h1>AeroMeds</h1>
+      <p>Medication delivery, on time — Charleston service area</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span><span class="pulse"></span>Live · updated 10:47 AM</span>
+    <span>Dispatcher: J. Alvarez</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="kpis">
+    <div class="kpi"><div class="label">Active deliveries</div><div class="value">7</div><div class="delta">2 approaching drop zone</div></div>
+    <div class="kpi"><div class="label">Completed today</div><div class="value">28</div><div class="delta">+12% vs. yesterday</div></div>
+    <div class="kpi"><div class="label">On-time rate</div><div class="value">96%</div><div class="delta">+3% vs. last week</div></div>
+    <div class="kpi"><div class="label">Avg. delivery time</div><div class="value">18 min</div><div class="delta">−4 min vs. last week</div></div>
+    <div class="kpi"><div class="label">Fleet health</div><div class="value">4 / 5</div><div class="delta down">1 needs check</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-head"><h2>Live delivery map</h2><div class="meta">Riverton / Brookfield service zone</div></div>
+      <div class="panel-body" style="padding:0;">
+        <div class="map">
+          <div class="zone nofly" style="top:14px;left:230px;width:120px;height:70px;"></div>
+          <div class="zone safe" style="top:120px;left:70px;width:150px;height:100px;"></div>
+          <div class="route" style="top:150px;left:110px;width:190px;transform:rotate(8deg);"></div>
+          <div class="pin pharmacy" style="top:96px;left:100px;" title="Riverside Pharmacy"></div>
+          <div class="pin drone" style="top:150px;left:190px;" title="AM-002 in transit"></div>
+          <div class="pin home" style="top:200px;left:280px;" title="Patient B"></div>
+          <div class="map-legend">
+            <span><span class="dot" style="background:var(--sub)"></span>Pharmacy</span>
+            <span><span class="dot" style="background:var(--teal)"></span>Drone</span>
+            <span><span class="dot" style="background:var(--amber)"></span>Delivery address</span>
+            <span><span class="dot" style="border:1.5px dashed var(--rust);background:none"></span>No-fly zone</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Alerts</h2><div class="meta">Newest first</div></div>
+      <div>
+        <div class="alert critical"><div class="icon">!</div><div class="txt"><strong>Temporary no-fly zone — Memorial Hospital</strong><span>Restricted airspace active until 6:00 PM. 1 route auto-rerouted.</span></div></div>
+        <div class="alert warn"><div class="icon">↻</div><div class="txt"><strong>AM-004 battery at 41%</strong><span>Returning to base early; delivery reassigned to AM-005.</span></div></div>
+        <div class="alert info"><div class="icon">✓</div><div class="txt"><strong>Order #AM7842 delivered</strong><span>Confirmed by recipient signature, 10:32 AM.</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid section-gap">
+    <div class="panel">
+      <div class="panel-head"><h2>Fleet status</h2><div class="meta">5 drones</div></div>
+      <div class="panel-body">
+        <div class="fleet-row"><div class="fleet-id">AM-001</div><div><div class="progress"><div style="width:78%"></div></div></div><div><span class="status-pill transit">In transit</span></div><div class="batt">78% batt</div></div>
+        <div class="fleet-row"><div class="fleet-id">AM-002</div><div><div class="progress"><div style="width:60%"></div></div></div><div><span class="status-pill delivering">Delivering</span></div><div class="batt">84% batt</div></div>
+        <div class="fleet-row"><div class="fleet-id">AM-003</div><div><div class="progress"><div style="width:92%"></div></div></div><div><span class="status-pill transit">In transit</span></div><div class="batt">92% batt</div></div>
+        <div class="fleet-row"><div class="fleet-id">AM-004</div><div><div class="progress"><div style="width:15%;background:var(--rust)"></div></div></div><div><span class="status-pill check">Return — check</span></div><div class="batt">41% batt</div></div>
+        <div class="fleet-row"><div class="fleet-id">AM-005</div><div><div class="progress"><div style="width:33%"></div></div></div><div><span class="status-pill transit">In transit</span></div><div class="batt">88% batt</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Deliveries by hour</h2><div class="meta">Today</div></div>
+      <div class="panel-body">
+        <div class="chart">
+          <div class="bar" style="height:35%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:80%"></div>
+          <div class="bar" style="height:100%;background:var(--amber)"></div><div class="bar" style="height:70%"></div><div class="bar" style="height:50%"></div><div class="bar" style="height:40%"></div>
+        </div>
+        <div class="chart-labels"><span>8am</span><span>9am</span><span>10am</span><span>11am</span><span>12pm</span><span>1pm</span><span>2pm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel section-gap">
+    <div class="panel-head"><h2>Recent deliveries</h2><div class="meta">Last 5</div></div>
+    <table>
+      <tr><th>Order</th><th>Medication</th><th>Destination</th><th>Status</th><th>ETA / completed</th></tr>
+      <tr><td>#AM7842</td><td>Amoxicillin 500mg</td><td>123 Maple St, Brookfield</td><td><span class="status-chip delivered">Delivered</span></td><td>10:32 AM</td></tr>
+      <tr><td>#AM7841</td><td>Lisinopril 10mg</td><td>456 Oak Ave, Riverton</td><td><span class="status-chip transit">In transit</span></td><td>ETA 10:58 AM</td></tr>
+      <tr><td>#AM7840</td><td>Metformin 500mg</td><td>789 Pine Rd, Lakeview</td><td><span class="status-chip delivered">Delivered</span></td><td>9:47 AM</td></tr>
+      <tr><td>#AM7839</td><td>Atorvastatin 20mg</td><td>321 Cedar Ln, Brookfield</td><td><span class="status-chip transit">In transit</span></td><td>ETA 11:15 AM</td></tr>
+      <tr><td>#AM7838</td><td>Insulin (refrigerated)</td><td>654 Hilltop Dr, Riverton</td><td><span class="status-chip delivered">Delivered</span></td><td>9:22 AM</td></tr>
+    </table>
+  </div>
+
+  <footer>AeroMeds Delivery Operations Dashboard — wireframe for ENGR 321 Project 1</footer>
+</div>
+</body>
+</html>
